@@ -7,6 +7,8 @@ import { useSiteConfig } from '../context/SiteConfigContext';
 import Grid from '@mui/material/Grid';
 import Link from '@mui/material/Link';
 import Button from '@mui/material/Button';
+import WarningIcon from '@mui/icons-material/Warning';
+import Divider from '@mui/material/Divider';
 
 const Footer: FC = () => {
   const currentYear = new Date().getFullYear();
@@ -22,97 +24,127 @@ const Footer: FC = () => {
       component="footer" 
       sx={{ 
         py: 5, 
-        bgcolor: theme.palette.mode === 'dark' ? '#121212' : '#f5f5f5',
-        borderTop: `1px solid ${theme.palette.divider}`,
-        mt: 4
+        bgcolor: theme.palette.mode === 'dark' ? '#0A0A0A' : '#121212',
+        borderTop: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,15,80,0.2)' : 'rgba(255,15,80,0.3)'}`,
+        color: '#fff',
+        mt: 6
       }}
     >
+      {/* Age verification disclaimer */}
+      <Box 
+        sx={{ 
+          backgroundColor: 'rgba(255, 15, 80, 0.1)', 
+          p: 2, 
+          mb: 4,
+          borderRadius: 1,
+          display: 'flex',
+          alignItems: 'center',
+          maxWidth: 1200,
+          mx: 'auto'
+        }}
+      >
+        <WarningIcon sx={{ color: '#FF0F50', mr: 2 }} />
+        <Typography variant="body2" sx={{ color: 'white' }}>
+          <strong>AGE VERIFICATION NOTICE:</strong> This website contains adult content and is intended for adults aged 18 years or older. 
+          By entering this site, you confirm that you are at least 18 years old and agree to our terms and conditions.
+        </Typography>
+      </Box>
+      
       <Container>
         <Grid container spacing={4}>
           <Grid item xs={12} md={4}>
             <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" color="text.primary" gutterBottom>
+              <Typography variant="h6" sx={{ color: '#FF0F50', fontWeight: 'bold', mb: 2 }}>
                 {siteName}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                We offer the best premium content for our users. 
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                We offer exclusive premium adult content for our users. 
                 All videos are carefully selected to ensure 
-                the highest quality content.
+                the highest quality viewing experience for our 18+ audience.
               </Typography>
             </Box>
           </Grid>
           
           <Grid item xs={12} md={4}>
-            <Typography variant="h6" color="text.primary" gutterBottom>
-              Useful Links
+            <Typography variant="h6" sx={{ color: '#FF0F50', fontWeight: 'bold', mb: 2 }}>
+              Quick Links
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
               <Link 
                 href="/" 
                 underline="hover" 
-                color="text.secondary"
-                sx={{ mb: 1 }}
+                sx={{ 
+                  mb: 1.5, 
+                  color: 'rgba(255,255,255,0.7)',
+                  '&:hover': {
+                    color: '#FF69B4'
+                  }
+                }}
               >
                 Home
+              </Link>
+              <Link 
+                href="/videos" 
+                underline="hover" 
+                sx={{ 
+                  mb: 1.5, 
+                  color: 'rgba(255,255,255,0.7)',
+                  '&:hover': {
+                    color: '#FF69B4'
+                  }
+                }}
+              >
+                Videos
               </Link>
               <Box 
                 sx={{ 
                   display: 'flex', 
                   alignItems: 'center',
-                  color: theme.palette.text.secondary,
-                  mt: 1
+                  color: '#FF69B4',
+                  mt: 1,
+                  background: 'rgba(255,15,80,0.1)',
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 1,
+                  width: 'fit-content'
                 }}
               >
                 <Typography variant="body2" fontWeight="bold">
-                  18+ Content
+                  18+ ADULTS ONLY
                 </Typography>
               </Box>
             </Box>
           </Grid>
           
           <Grid item xs={12} md={4}>
-            <Typography variant="h6" color="text.primary" gutterBottom>
-              About
+            <Typography variant="h6" sx={{ color: '#FF0F50', fontWeight: 'bold', mb: 2 }}>
+              Legal Information
             </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              This website is for adults 18 years or older only.
-              All content is protected by copyright.
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }} paragraph>
+              This website contains adult-oriented material intended for individuals 18 years of age or older. 
+              All models appearing on this website were 18 years of age or older at the time of production.
             </Typography>
-            {/* <Button 
-              variant="outlined" 
-              size="small"
-              color="primary"
-              onClick={handleBuyTemplate}
-              sx={{ 
-                mt: 1,
-                fontSize: '0.75rem',
-                opacity: 0.7,
-                '&:hover': {
-                  opacity: 1
-                }
-              }}
-            >
-              Buy this template
-            </Button> */}
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)' }} paragraph>
+              USC 2257 Record-Keeping Requirements Compliance Statement
+            </Typography>
           </Grid>
         </Grid>
         
+        <Divider sx={{ my: 4, borderColor: 'rgba(255,255,255,0.1)' }} />
+        
         <Box 
           sx={{ 
-            borderTop: `1px solid ${theme.palette.divider}`,
-            mt: 4,
-            pt: 3,
             display: 'flex', 
             flexDirection: { xs: 'column', md: 'row' },
             alignItems: 'center',
             justifyContent: 'space-between'
           }}
         >
-          <Typography variant="body2" color="text.secondary">
-            &copy; {currentYear} {siteName}. All rights reserved.
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+            &copy; {currentYear} {siteName}. All rights reserved. Adults only.
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: { xs: 1, md: 0 } }}>
-            Designed with ❤️ for premium content
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mt: { xs: 1, md: 0 } }}>
+            By accessing this site you agree that you are at least 18 years old
           </Typography>
         </Box>
       </Container>

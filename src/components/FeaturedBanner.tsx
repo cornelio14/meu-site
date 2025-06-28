@@ -5,7 +5,9 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import InfoIcon from '@mui/icons-material/Info';
+import WarningIcon from '@mui/icons-material/Warning';
 import { VideoService, Video } from '../services/VideoService';
+import Chip from '@mui/material/Chip';
 
 interface FeaturedBannerProps {
   onError?: (error: string) => void;
@@ -16,34 +18,34 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar se já temos um vídeo em destaque armazenado na sessão
+    // Check if we already have a featured video stored in session
     const storedFeaturedVideo = sessionStorage.getItem('featuredVideo');
     
     if (storedFeaturedVideo) {
       try {
-        // Se já temos um vídeo armazenado, usá-lo
+        // If we already have a stored video, use it
         setFeaturedVideo(JSON.parse(storedFeaturedVideo));
         setLoading(false);
         return;
       } catch (error) {
         console.error('Error parsing stored featured video:', error);
-        // Se houver erro ao analisar o vídeo armazenado, buscar um novo
+        // If there's an error parsing the stored video, fetch a new one
       }
     }
 
-    // Se não temos um vídeo armazenado, buscar um novo
+    // If we don't have a stored video, fetch a new one
     const fetchRandomVideo = async () => {
       try {
         setLoading(true);
-        // Buscar todos os vídeos
+        // Fetch all videos
         const videos = await VideoService.getAllVideos();
         
         if (videos.length > 0) {
-          // Selecionar um vídeo aleatório
+          // Select a random video
           const randomIndex = Math.floor(Math.random() * videos.length);
           const selectedVideo = videos[randomIndex];
           
-          // Armazenar o vídeo selecionado na sessão para uso futuro
+          // Store the selected video in session for future use
           sessionStorage.setItem('featuredVideo', JSON.stringify(selectedVideo));
           
           setFeaturedVideo(selectedVideo);
@@ -62,10 +64,10 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
   }, [onError]);
 
   if (loading || !featuredVideo) {
-    return null; // Ou um skeleton loader
+    return null; // Or a skeleton loader
   }
 
-  // Extrair apenas o que precisamos da descrição (primeiros 150 caracteres)
+  // Extract only what we need from the description (first 150 characters)
   const truncatedDescription = featuredVideo.description.length > 150 
     ? `${featuredVideo.description.substring(0, 150)}...` 
     : featuredVideo.description;
@@ -80,7 +82,30 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
         mb: 4,
       }}
     >
-      {/* Imagem de fundo (thumbnail) */}
+      {/* Age verification banner */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          color: 'white',
+          padding: '8px 16px',
+          zIndex: 3,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 1,
+        }}
+      >
+        <WarningIcon sx={{ color: '#FF0F50' }} />
+        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+          18+ ADULT CONTENT • By continuing, you confirm you are at least 18 years old
+        </Typography>
+      </Box>
+
+      {/* Background image (thumbnail) with gradient overlay */}
       <Box
         sx={{
           position: 'absolute',
@@ -91,6 +116,7 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
           backgroundImage: `url(${featuredVideo.thumbnailUrl})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+          filter: 'brightness(0.85)',
           '&::after': {
             content: '""',
             position: 'absolute',
@@ -98,12 +124,22 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
             left: 0,
             width: '100%',
             height: '100%',
-            background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.3) 100%)',
+            background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.4) 100%)',
           },
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(90deg, rgba(255,15,80,0.15) 0%, rgba(0,0,0,0) 100%)',
+            zIndex: 1,
+          }
         }}
       />
 
-      {/* Conteúdo do banner */}
+      {/* Banner content */}
       <Box
         sx={{
           position: 'absolute',
@@ -114,6 +150,17 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
           zIndex: 2,
         }}
       >
+        <Chip 
+          label="FEATURED EXCLUSIVE" 
+          color="primary"
+          sx={{ 
+            mb: 2, 
+            fontWeight: 'bold', 
+            backgroundColor: '#FF0F50',
+            '& .MuiChip-label': { px: 1, py: 0.5 }
+          }} 
+        />
+
         <Typography 
           variant="h2" 
           component="h1" 
@@ -121,7 +168,7 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
             color: 'white',
             fontWeight: 'bold',
             fontSize: { xs: '2rem', sm: '3rem', md: '4rem' },
-            textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+            textShadow: '2px 2px 8px rgba(0,0,0,0.7)',
             mb: 2,
           }}
         >
@@ -134,7 +181,8 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
             color: 'white', 
             maxWidth: { xs: '100%', md: '50%' },
             mb: 3,
-            textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+            textShadow: '1px 1px 3px rgba(0,0,0,0.9)',
+            fontSize: '1.1rem',
           }}
         >
           {truncatedDescription}
@@ -148,17 +196,19 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
             size="large"
             startIcon={<PlayArrowIcon />}
             sx={{
-              bgcolor: 'white',
-              color: 'black',
+              bgcolor: '#FF0F50',
+              color: 'white',
               fontWeight: 'bold',
               '&:hover': {
-                bgcolor: 'rgba(255,255,255,0.75)',
+                bgcolor: '#D10D42',
+                transform: 'scale(1.03)',
               },
               px: 4,
-              py: 1,
+              py: 1.2,
+              borderRadius: '8px',
             }}
           >
-            Play
+            Watch Now
           </Button>
           
           <Button
@@ -168,40 +218,61 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
             size="large"
             startIcon={<InfoIcon />}
             sx={{
-              bgcolor: 'rgba(109, 109, 110, 0.7)',
+              bgcolor: 'rgba(25, 25, 25, 0.8)',
               color: 'white',
               fontWeight: 'bold',
               '&:hover': {
-                bgcolor: 'rgba(109, 109, 110, 0.9)',
+                bgcolor: 'rgba(25, 25, 25, 0.95)',
+                transform: 'scale(1.03)',
               },
               px: 4,
-              py: 1,
+              py: 1.2,
+              borderRadius: '8px',
             }}
           >
             More Info
           </Button>
         </Box>
 
-        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ mt: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography 
             variant="body2" 
             sx={{ 
-              color: '#46d369', 
+              color: 'white', 
               fontWeight: 'bold',
               display: 'inline-block',
-              border: '1px solid #46d369',
-              px: 1,
+              border: '1px solid #FF0F50',
+              bgcolor: 'rgba(255, 15, 80, 0.2)',
+              px: 1.5,
+              py: 0.5,
               borderRadius: '4px',
             }}
           >
-            {featuredVideo.duration}
+            18+ ADULTS ONLY
           </Typography>
           
           <Typography 
             variant="body2" 
-            sx={{ color: 'white' }}
+            sx={{ 
+              color: '#FF69B4',
+              fontWeight: 'bold',
+              fontSize: '1rem',
+            }}
           >
             ${featuredVideo.price.toFixed(2)}
+          </Typography>
+          
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: 'white',
+              bgcolor: 'rgba(25, 25, 25, 0.7)',
+              px: 1,
+              py: 0.5,
+              borderRadius: '4px',
+            }}
+          >
+            {featuredVideo.duration}
           </Typography>
         </Box>
       </Box>

@@ -20,7 +20,7 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  // Sempre iniciar com tema escuro para simular Netflix
+  // Always start with dark theme for adult content site
   const [mode, setMode] = useState<ThemeMode>('dark');
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     if (savedTheme) {
       setMode(savedTheme);
     } else {
-      // Definir tema escuro como padrão
+      // Set dark theme as default
       localStorage.setItem('theme', 'dark');
     }
   }, []);
@@ -51,27 +51,32 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     palette: {
       mode,
       primary: {
-        main: '#E50914', // Vermelho Netflix
+        main: '#FF0F50', // Vibrant red/pink for adult content
       },
       secondary: {
-        main: '#FFFFFF', // Branco para botões secundários
+        main: '#9900CC', // Purple accent
       },
       background: {
-        default: mode === 'dark' ? '#141414' : '#f5f5f5', // Fundo escuro estilo Netflix
-        paper: mode === 'dark' ? '#181818' : '#ffffff',   // Cards escuros estilo Netflix
+        default: mode === 'dark' ? '#0A0A0A' : '#f5f5f5', // Deeper black background
+        paper: mode === 'dark' ? '#121212' : '#ffffff',   // Darker cards
       },
       text: {
         primary: mode === 'dark' ? '#FFFFFF' : '#000000',
-        secondary: mode === 'dark' ? '#B3B3B3' : '#555555', // Texto secundário cinza
+        secondary: mode === 'dark' ? '#FF69B4' : '#555555', // Hot pink for secondary text in dark mode
+      },
+      error: {
+        main: '#FF0000', // Pure red for errors
       },
     },
     typography: {
-      fontFamily: '"Netflix Sans", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Montserrat", "Roboto", "Helvetica", "Arial", sans-serif',
       h1: {
-        fontWeight: 700,
+        fontWeight: 800,
+        letterSpacing: '0.5px',
       },
       h2: {
         fontWeight: 700,
+        letterSpacing: '0.3px',
       },
       h3: {
         fontWeight: 600,
@@ -81,20 +86,22 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       },
       button: {
         fontWeight: 600,
-        textTransform: 'none', // Netflix não usa texto em maiúsculas nos botões
+        textTransform: 'none',
       },
     },
     components: {
       MuiButton: {
         styleOverrides: {
           root: {
-            borderRadius: 4,
+            borderRadius: 6,
             padding: '8px 20px',
+            transition: 'all 0.3s ease',
           },
           containedPrimary: {
-            backgroundColor: '#E50914',
+            backgroundColor: '#FF0F50',
             '&:hover': {
-              backgroundColor: '#B20710',
+              backgroundColor: '#D10D42',
+              transform: 'scale(1.03)',
             },
           },
         },
@@ -102,11 +109,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       MuiCard: {
         styleOverrides: {
           root: {
-            borderRadius: 4,
-            transition: 'transform 0.3s ease-in-out',
+            borderRadius: 8,
+            transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease',
             '&:hover': {
               transform: 'scale(1.05)',
               zIndex: 1,
+              boxShadow: '0 10px 20px rgba(0,0,0,0.5)',
             },
           },
         },
@@ -114,10 +122,19 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       MuiAppBar: {
         styleOverrides: {
           root: {
-            backgroundColor: mode === 'dark' ? '#141414' : '#ffffff',
-            boxShadow: 'none',
+            backgroundColor: mode === 'dark' ? '#121212' : '#ffffff',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
           },
         },
+      },
+      MuiIconButton: {
+        styleOverrides: {
+          root: {
+            '&:hover': {
+              backgroundColor: 'rgba(255, 15, 80, 0.1)',
+            }
+          }
+        }
       },
     },
   });

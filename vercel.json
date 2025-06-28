@@ -1,1 +1,19 @@
-{ "rewrites": [{ "source": "/(.*)", "destination": "/" }] }
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ],
+  "functions": {
+    "api/create-checkout-session.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "env": {
+    "STRIPE_SECRET_KEY": "@stripe_secret_key",
+    "APPWRITE_ENDPOINT": "@appwrite_endpoint",
+    "APPWRITE_PROJECT_ID": "@appwrite_project_id",
+    "APPWRITE_API_KEY": "@appwrite_api_key",
+    "APPWRITE_DATABASE_ID": "@appwrite_database_id",
+    "APPWRITE_SITE_CONFIG_COLLECTION_ID": "@appwrite_site_config_collection_id"
+  }
+}

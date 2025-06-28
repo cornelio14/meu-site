@@ -127,6 +127,8 @@ interface SiteConfig {
   $id: string;
   site_name: string;
   paypal_client_id: string;
+  stripe_publishable_key: string;
+  stripe_secret_key: string;
   telegram_username: string;
   video_list_title?: string;
   crypto?: string[];
@@ -168,6 +170,8 @@ const Admin: FC = () => {
   const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
   const [siteName, setSiteName] = useState('');
   const [paypalClientId, setPaypalClientId] = useState('');
+  const [stripePublishableKey, setStripePublishableKey] = useState('');
+  const [stripeSecretKey, setStripeSecretKey] = useState('');
   const [telegramUsername, setTelegramUsername] = useState('');
   const [videoListTitle, setVideoListTitle] = useState('');
   const [cryptoWallets, setCryptoWallets] = useState<string[]>([]);
@@ -290,6 +294,8 @@ const Admin: FC = () => {
         setSiteConfig(config);
         setSiteName(config.site_name);
         setPaypalClientId(config.paypal_client_id);
+        setStripePublishableKey(config.stripe_publishable_key || '');
+        setStripeSecretKey(config.stripe_secret_key || '');
         setTelegramUsername(config.telegram_username);
         setVideoListTitle(config.video_list_title || 'Available Videos');
         
@@ -703,91 +709,49 @@ const Admin: FC = () => {
       setLoading(true);
       setError(null);
       
-      // Prepare basic config data without crypto
-      const configData = {
-        site_name: siteName,
-        paypal_client_id: paypalClientId,
-        telegram_username: telegramUsername,
-        video_list_title: videoListTitle
-      };
-      
-      if (siteConfig) {
-        // Update existing config with basic data first
+      if (!siteConfig) {
+        // Create new config
+        const newConfig = {
+          site_name: siteName,
+          paypal_client_id: paypalClientId,
+          stripe_publishable_key: stripePublishableKey,
+          stripe_secret_key: stripeSecretKey,
+          telegram_username: telegramUsername,
+          video_list_title: videoListTitle || 'Available Videos',
+          crypto: cryptoWallets,
+        };
+        
+        await databases.createDocument(
+          databaseId,
+          siteConfigCollectionId,
+          ID.unique(),
+          newConfig
+        );
+      } else {
+        // Update existing config
+        const updatedConfig = {
+          site_name: siteName,
+          paypal_client_id: paypalClientId,
+          stripe_publishable_key: stripePublishableKey,
+          stripe_secret_key: stripeSecretKey,
+          telegram_username: telegramUsername,
+          video_list_title: videoListTitle || 'Available Videos',
+          crypto: cryptoWallets,
+        };
+        
         await databases.updateDocument(
           databaseId,
           siteConfigCollectionId,
           siteConfig.$id,
-          configData
+          updatedConfig
         );
-        
-        // Store crypto wallets locally
-        if (cryptoWallets.length > 0) {
-          // Store in localStorage as a fallback
-          localStorage.setItem('cryptoWallets', JSON.stringify(cryptoWallets));
-          
-          try {
-            // Try to update with crypto wallets
-            await databases.updateDocument(
-              databaseId,
-              siteConfigCollectionId,
-              siteConfig.$id,
-              { crypto: cryptoWallets }
-            );
-            showFeedback('Site configuration updated successfully with crypto wallets', 'success');
-          } catch (cryptoErr) {
-            console.error('Error saving crypto wallets:', cryptoErr);
-            showFeedback('Basic configuration saved. Crypto wallets are stored locally but not in the database.', 'error');
-          }
-        } else {
-          // Clear any stored wallets
-          localStorage.removeItem('cryptoWallets');
-        showFeedback('Site configuration updated successfully', 'success');
-        }
-      } else {
-        // Create new config with basic data
-        const newConfig = await databases.createDocument(
-          databaseId,
-          siteConfigCollectionId,
-          ID.unique(),
-          configData
-        );
-        
-        // Store crypto wallets locally
-        if (cryptoWallets.length > 0) {
-          // Store in localStorage as a fallback
-          localStorage.setItem('cryptoWallets', JSON.stringify(cryptoWallets));
-          
-          try {
-            // Try to update with crypto wallets
-            await databases.updateDocument(
-              databaseId,
-              siteConfigCollectionId,
-              newConfig.$id,
-              { crypto: cryptoWallets }
-            );
-            showFeedback('Site configuration created successfully with crypto wallets', 'success');
-          } catch (cryptoErr) {
-            console.error('Error saving crypto wallets:', cryptoErr);
-            showFeedback('Basic configuration created. Crypto wallets are stored locally but not in the database.', 'error');
-          }
-        } else {
-          // Clear any stored wallets
-          localStorage.removeItem('cryptoWallets');
-        showFeedback('Site configuration created successfully', 'success');
-        }
       }
       
-      // Refresh the site config context
-      refreshConfig();
-      
-      // Reload site config
-      fetchSiteConfig();
-      
-      // Exit edit mode
+      showFeedback('Site configuration saved successfully', 'success');
+      refreshConfig(); // Update the context with new config
       setEditingConfig(false);
     } catch (err) {
       console.error('Error saving site config:', err);
-      setError('Failed to save site configuration');
       showFeedback('Failed to save site configuration', 'error');
     } finally {
       setLoading(false);
@@ -1176,6 +1140,25 @@ const Admin: FC = () => {
                           
                           <TextField
                             fullWidth
+                            label="Stripe Publishable Key"
+                            value={stripePublishableKey}
+                            onChange={(e) => setStripePublishableKey(e.target.value)}
+                            margin="normal"
+                            disabled={!editingConfig}
+                          />
+                          
+                          <TextField
+                            fullWidth
+                            label="Stripe Secret Key"
+                            value={stripeSecretKey}
+                            onChange={(e) => setStripeSecretKey(e.target.value)}
+                            margin="normal"
+                            disabled={!editingConfig}
+                            type="password"
+                          />
+                          
+                          <TextField
+                            fullWidth
                             margin="normal"
                             label="Telegram Username (without @)"
                             value={telegramUsername}
@@ -1297,6 +1280,8 @@ const Admin: FC = () => {
                                 if (siteConfig) {
                                   setSiteName(siteConfig.site_name);
                                   setPaypalClientId(siteConfig.paypal_client_id);
+                                  setStripePublishableKey(siteConfig.stripe_publishable_key || '');
+                                  setStripeSecretKey(siteConfig.stripe_secret_key || '');
                                   setTelegramUsername(siteConfig.telegram_username);
                                   setVideoListTitle(siteConfig.video_list_title || 'Available Videos');
                                 }
@@ -1316,6 +1301,14 @@ const Admin: FC = () => {
                             
                             <Typography variant="subtitle1" gutterBottom>
                               <strong>PayPal Client ID:</strong> {siteConfig?.paypal_client_id || 'Not set'}
+                            </Typography>
+                            
+                            <Typography variant="subtitle1">
+                              <strong>Stripe Publishable Key:</strong> {siteConfig?.stripe_publishable_key || 'Not set'}
+                            </Typography>
+                            
+                            <Typography variant="subtitle1">
+                              <strong>Stripe Secret Key:</strong> {siteConfig?.stripe_secret_key ? '•••••••••••••••••••••' : 'Not set'}
                             </Typography>
                             
                             <Typography variant="subtitle1">

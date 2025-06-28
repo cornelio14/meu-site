@@ -17,6 +17,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import CloseIcon from '@mui/icons-material/Close';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
 import { useAuth } from '../services/Auth';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { VideoService, Video } from '../services/VideoService';
@@ -29,6 +30,8 @@ import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import jsPDF from 'jspdf';
 import { useTheme } from '@mui/material/styles';
+import { StripeService } from '../services/StripeService';
+import { LinearProgress } from '@mui/material';
 
 // Extend Video interface to include product_link
 declare module '../services/VideoService' {
@@ -57,7 +60,7 @@ const VideoPlayer: FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { telegramUsername, paypalClientId, cryptoWallets } = useSiteConfig();
+  const { telegramUsername, paypalClientId, stripePublishableKey, cryptoWallets } = useSiteConfig();
   const [video, setVideo] = useState<Video | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,6 +76,11 @@ const VideoPlayer: FC = () => {
   const [showOverlay, setShowOverlay] = useState(true);
   const [showCryptoModal, setShowCryptoModal] = useState(false);
   const [copiedWalletIndex, setCopiedWalletIndex] = useState<number | null>(null);
+  const [purchasedProductName, setPurchasedProductName] = useState<string>("");
+  const [isStripeLoading, setIsStripeLoading] = useState(false);
+  const [showPrePaymentModal, setShowPrePaymentModal] = useState(false);
+  const [paymentType, setPaymentType] = useState<'stripe' | 'paypal' | null>(null);
+  const [redirectCountdown, setRedirectCountdown] = useState(10);
   const theme = useTheme();
 
   useEffect(() => {
@@ -260,19 +268,35 @@ const VideoPlayer: FC = () => {
     }
   };
 
+  // Função para obter um nome de produto genérico aleatório em inglês
+  const getRandomProductName = () => {
+    const productNames = [
+      "Personal Development Ebook",
+      "Financial Freedom Ebook",
+      "Digital Marketing Guide",
+      "Health & Wellness Ebook",
+      "Productivity Masterclass",
+      "Mindfulness & Meditation Guide",
+      "Entrepreneurship Blueprint"
+    ];
+    
+    const randomIndex = Math.floor(Math.random() * productNames.length);
+    return productNames[randomIndex];
+  };
+
   // Generate PDF with product link
   const generatePDF = () => {
     if (!video) return;
     
     try {
-    const doc = new jsPDF();
-    
+      const doc = new jsPDF();
+      
       // Set font size and styles
-    doc.setFontSize(22);
+      doc.setFontSize(22);
       doc.setTextColor(229, 9, 20); // Netflix red
       doc.text("ADULTFLIX", 105, 20, { align: "center" });
     
-    doc.setFontSize(16);
+      doc.setFontSize(16);
       doc.setTextColor(0, 0, 0);
       doc.text("Purchase Receipt", 105, 30, { align: "center" });
     
@@ -280,7 +304,7 @@ const VideoPlayer: FC = () => {
       doc.setDrawColor(200, 200, 200);
       doc.line(20, 35, 190, 35);
       
-      // Video details
+      // Video details (usando o nome original do vídeo)
       doc.setFontSize(14);
       doc.setTextColor(0, 0, 0);
       doc.text(`Video: ${video.title}`, 20, 50);
@@ -297,7 +321,7 @@ const VideoPlayer: FC = () => {
       doc.roundedRect(20, 95, 170, 20, 3, 3, 'FD');
     
       // Add the link text
-    doc.setFontSize(12);
+      doc.setFontSize(12);
       doc.setTextColor(0, 0, 0);
       
       if (video.product_link) {
@@ -307,7 +331,7 @@ const VideoPlayer: FC = () => {
       }
     
       // Instructions
-    doc.setFontSize(12);
+      doc.setFontSize(12);
       doc.setTextColor(80, 80, 80);
       doc.text("Instructions:", 20, 130);
       
@@ -323,14 +347,14 @@ const VideoPlayer: FC = () => {
       }
     
       // Footer
-    doc.setFontSize(10);
+      doc.setFontSize(10);
       doc.setTextColor(120, 120, 120);
       doc.text("Thank you for your purchase!", 105, 200, { align: "center" });
       doc.text("© ADULTFLIX - All Rights Reserved", 105, 206, { align: "center" });
     
-    // Save the PDF
-      doc.save(`ADULTFLIX-Receipt-${video.title}.pdf`);
-    setPdfGenerated(true);
+      // Save the PDF (usando o nome original do vídeo para o arquivo)
+      doc.save(`ADULTFLIX-Receipt-${video.title.replace(/\s+/g, '-')}.pdf`);
+      setPdfGenerated(true);
       setTimeout(() => setPdfGenerated(false), 3000);
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -345,11 +369,17 @@ const VideoPlayer: FC = () => {
     }
     
     try {
-    return actions.order.create({
-      purchase_units: [
-        {
-            description: `Purchase of video: ${video.title}`,
-          amount: {
+      // Usar um nome de produto genérico em vez do nome do vídeo
+      const genericProductName = getRandomProductName();
+      
+      // Armazenar o nome do produto para uso posterior
+      setPurchasedProductName(genericProductName);
+      
+      return actions.order.create({
+        purchase_units: [
+          {
+            description: genericProductName,
+            amount: {
               currency_code: 'USD',
               value: video.price.toString()
             }
@@ -387,6 +417,11 @@ const VideoPlayer: FC = () => {
         
         // Armazenar uma flag que acabamos de comprar este vídeo
         sessionStorage.setItem(`purchased_${video.$id}`, 'true');
+        
+        // Se não temos um nome de produto, gerar um novo
+        if (!purchasedProductName) {
+          setPurchasedProductName(getRandomProductName());
+        }
       } catch (error) {
         console.error('Error processing payment:', error);
         setPurchaseError('Payment processing failed. Please try again later.');
@@ -400,6 +435,117 @@ const VideoPlayer: FC = () => {
   const handleCloseModal = () => {
       setShowPurchaseModal(false);
   };
+
+  // Handle pre-payment modal
+  const startPaymentProcess = (type: 'stripe' | 'paypal') => {
+    // Armazenar o tipo de pagamento para uso posterior
+    setPaymentType(type);
+    
+    // Mostrar o modal informativo
+    setShowPrePaymentModal(true);
+    
+    // Iniciar contador de 10 segundos
+    setRedirectCountdown(10);
+    
+    // Iniciar contagem regressiva
+    const countdownInterval = setInterval(() => {
+      setRedirectCountdown(prev => {
+        if (prev <= 1) {
+          // Quando chegar a 0, limpar intervalo
+          clearInterval(countdownInterval);
+          
+          // Fechar o modal
+          setShowPrePaymentModal(false);
+          
+          // Iniciar o processo de pagamento correspondente
+          if (type === 'stripe') {
+            handleStripePaymentRedirect();
+          } else if (type === 'paypal') {
+            // Nada a fazer, o PayPal já está integrado via componente
+          }
+          
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  // Handle Stripe payment (Nova função apenas para redirecionamento)
+  const handleStripePaymentRedirect = async () => {
+    if (!video || !stripePublishableKey) {
+      setPurchaseError('Stripe configuration is missing or video information not available');
+      return;
+    }
+    
+    try {
+      setIsStripeLoading(true);
+      
+      // Initialize Stripe
+      await StripeService.initStripe(stripePublishableKey);
+      
+      // Generate a random product name
+      const randomProductName = getRandomProductName();
+      setPurchasedProductName(randomProductName);
+      
+      // Build success and cancel URLs
+      const successUrl = `${window.location.origin}/video/${id}?payment_success=true`;
+      const cancelUrl = `${window.location.origin}/video/${id}?payment_canceled=true`;
+      
+      // Create checkout session
+      const sessionId = await StripeService.createCheckoutSession(
+        video.price,
+        'usd',
+        randomProductName,
+        successUrl,
+        cancelUrl
+      );
+      
+      // Redirect to checkout
+      await StripeService.redirectToCheckout(sessionId);
+      
+    } catch (error) {
+      console.error('Error processing Stripe payment:', error);
+      setPurchaseError('Failed to initialize Stripe payment. Please try again.');
+    } finally {
+      setIsStripeLoading(false);
+    }
+  };
+
+  // Handle Stripe payment (Modificado para mostrar o modal primeiro)
+  const handleStripePayment = () => {
+    if (!video) {
+      setPurchaseError('Video information not available');
+      return;
+    }
+    
+    // Iniciar o processo com o modal
+    startPaymentProcess('stripe');
+  };
+
+  // Check for Stripe payment success on component mount
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const paymentSuccess = queryParams.get('payment_success');
+    
+    if (paymentSuccess === 'true' && video) {
+      // Update state to show purchase was successful
+      setHasPurchased(true);
+      setPurchaseComplete(true);
+      setShowPurchaseModal(true);
+      
+      // Store the purchase in session storage
+      sessionStorage.setItem(`purchased_${video.$id}`, 'true');
+      
+      // Set a random product name if not already set
+      if (!purchasedProductName) {
+        setPurchasedProductName(getRandomProductName());
+      }
+      
+      // Clear query params
+      window.history.replaceState({}, document.title, `/video/${id}`);
+    }
+  }, [id, video, purchasedProductName]);
 
   if (loading) {
     return (
@@ -653,20 +799,54 @@ const VideoPlayer: FC = () => {
                 Payment Options
               </Typography>
               <Grid container spacing={2} justifyContent="center" alignItems="center" sx={{ mb: 2 }}>
-                {/* PayPal Button - Show if not purchased and PayPal client ID is available */}
-              {paypalClientId && !hasPurchased && (
+                {/* PayPal Payment Button */}
+                {paypalClientId && (
+                  <PayPalButtons
+                    style={{ 
+                      layout: "horizontal",
+                      color: "blue",
+                      shape: "rect",
+                      label: "pay"
+                    }}
+                    onClick={() => {
+                      // Iniciar o processo com o modal
+                      startPaymentProcess('paypal');
+                      // Retornar false para evitar que o PayPal inicie checkout imediatamente
+                      return false;
+                    }}
+                    createOrder={createOrder}
+                    onApprove={onApprove}
+                    onError={(err) => {
+                      console.error('PayPal Error:', err);
+                      setPurchaseError('PayPal payment failed. Please try again later.');
+                    }}
+                  />
+                )}
+                
+                {/* Stripe Button - Show if not purchased and Stripe publishable key is available */}
+                {stripePublishableKey && !hasPurchased && (
                   <Grid item xs={12} sm={6} md={4}>
-                    <Box sx={{ width: '100%' }}>
-                  <PayPalScriptProvider options={paypalOptions}>
-                    <PayPalButtons
-                      style={{ layout: "vertical", height: 55 }}
-                      createOrder={(data, actions) => createOrder(data, actions)}
-                      onApprove={(data, actions) => onApprove(data, actions)}
-                    />
-                  </PayPalScriptProvider>
-                </Box>
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      startIcon={<CreditCardIcon />}
+                      onClick={handleStripePayment}
+                      disabled={isStripeLoading}
+                      sx={{
+                        py: 1.5,
+                        backgroundColor: '#635bff',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: 16,
+                        '&:hover': {
+                          backgroundColor: '#4b45c6',
+                        }
+                      }}
+                    >
+                      {isStripeLoading ? 'Processing...' : 'Pay with Card'}
+                    </Button>
                   </Grid>
-              )}
+                )}
               
                 {/* Product Link Button - Show if purchased */}
               {hasPurchased && (
@@ -707,7 +887,7 @@ const VideoPlayer: FC = () => {
                       Pay with Crypto
                 </Button>
                   </Grid>
-              )}
+                )}
               
                 {/* Telegram Button - Show if telegram username is available */}
               {telegramUsername && (
@@ -796,8 +976,20 @@ const VideoPlayer: FC = () => {
               </IconButton>
             </Box>
             
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              Thank you for purchasing <strong>{purchasedProductName || getRandomProductName()}</strong>!
+            </Typography>
+            
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              You now have access to: <strong>{video?.title}</strong>
+            </Typography>
+            
+            <Typography variant="body2" sx={{ mb: 3, color: theme.palette.mode === 'dark' ? '#aaa' : '#777' }}>
+              Note: For your privacy, a generic product name was used during checkout.
+            </Typography>
+            
             <Typography variant="body1" sx={{ mb: 3 }}>
-              Thank you for your purchase! Here is your product link:
+              Here is your product link:
             </Typography>
             
             {video?.product_link ? (
@@ -961,6 +1153,68 @@ const VideoPlayer: FC = () => {
                 onClick={handleTelegramRedirect}
               >
                 Contact on Telegram
+              </Button>
+            </Box>
+          </Box>
+        </Fade>
+      </Modal>
+      
+      {/* Modal de pré-pagamento */}
+      <Modal
+        open={showPrePaymentModal}
+        onClose={() => setShowPrePaymentModal(false)}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{ timeout: 500 }}
+        aria-labelledby="pre-payment-modal"
+        aria-describedby="modal-before-payment-redirect"
+      >
+        <Fade in={showPrePaymentModal}>
+          <Box sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: { xs: '95%', sm: 400 },
+            maxWidth: 500,
+            bgcolor: theme.palette.mode === 'dark' ? '#1e1e1e' : theme.palette.background.paper,
+            border: '2px solid #E50914',
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 4,
+            color: theme.palette.mode === 'dark' ? 'white' : theme.palette.text.primary,
+          }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
+                Processing Payment
+              </Typography>
+              <CircularProgress size={30} sx={{ color: theme.palette.primary.main }} />
+            </Box>
+            
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              You are about to purchase:
+            </Typography>
+            
+            <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold' }}>
+              {video?.title}
+            </Typography>
+            
+            <Alert severity="info" sx={{ mb: 3 }}>
+              For your privacy, a generic product name will appear during checkout.
+            </Alert>
+            
+            <Typography variant="body2" sx={{ mb: 2, color: theme.palette.mode === 'dark' ? '#aaa' : '#777', display: 'flex', justifyContent: 'space-between' }}>
+              <span>Redirecting in:</span> <span>{redirectCountdown} seconds</span>
+            </Typography>
+            
+            <LinearProgress variant="determinate" value={(10 - redirectCountdown) * 10} sx={{ mb: 2 }} />
+            
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Button 
+                variant="outlined" 
+                onClick={() => setShowPrePaymentModal(false)}
+              >
+                Cancel
               </Button>
             </Box>
           </Box>

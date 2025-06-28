@@ -14,6 +14,7 @@ import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
+import Chip from '@mui/material/Chip';
 
 const Header: FC = () => {
   const { mode, toggleTheme } = useContext(ThemeContext);
@@ -38,8 +39,9 @@ const Header: FC = () => {
     <AppBar 
       position="sticky"
       sx={{
-        bgcolor: mode === 'dark' ? 'primary.main' : 'primary.main',
-        color: '#fff'
+        bgcolor: mode === 'dark' ? '#0A0A0A' : '#121212',
+        color: '#fff',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
       }}
     >
       <Toolbar>
@@ -59,20 +61,20 @@ const Header: FC = () => {
             sx={{
               display: 'flex',
               alignItems: 'center',
-              background: 'linear-gradient(to right, #E50914 0%, #B20710 100%)',
-              borderRadius: '4px',
+              background: 'linear-gradient(to right, #FF0F50 0%, #D10D42 100%)',
+              borderRadius: '8px',
               px: 1.5,
               py: 0.5,
               mr: 1,
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
             }}
           >
             <Typography
               variant="h6"
               sx={{
-                fontWeight: 600,
-                letterSpacing: '0.2px',
-                fontFamily: "'Roboto', sans-serif",
+                fontWeight: 700,
+                letterSpacing: '0.5px',
+                fontFamily: "'Montserrat', sans-serif",
                 fontSize: { xs: '0.9rem', sm: '1.1rem' },
                 color: 'white',
               }}
@@ -90,20 +92,20 @@ const Header: FC = () => {
               </Box>
             </Typography>
           </Box>
+          
+          <Chip 
+            label="18+" 
+            size="small"
+            sx={{ 
+              ml: 1, 
+              bgcolor: '#FF0F50', 
+              color: 'white', 
+              fontWeight: 'bold',
+              height: '22px',
+              fontSize: '0.7rem'
+            }} 
+          />
         </Box>
-        
-        {/* Theme Toggle
-        <IconButton 
-          color="inherit" 
-          onClick={toggleTheme} 
-          sx={{ 
-            mr: 1,
-            color: '#fff'
-          }}
-          aria-label="toggle theme"
-        >
-          {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
-        </IconButton> */}
         
         {/* Navigation */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -114,8 +116,9 @@ const Header: FC = () => {
             sx={{ 
               mr: 1,
               color: '#fff',
+              fontWeight: 600,
               '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.1)'
+                bgcolor: 'rgba(255, 15, 80, 0.1)'
               }
             }}
           >
@@ -129,8 +132,9 @@ const Header: FC = () => {
             sx={{ 
               mr: 1,
               color: '#fff',
+              fontWeight: 600,
               '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.1)'
+                bgcolor: 'rgba(255, 15, 80, 0.1)'
               }
             }}
           >
@@ -148,8 +152,9 @@ const Header: FC = () => {
                 sx={{ 
                   mr: 1,
                   color: '#fff',
+                  fontWeight: 600,
                   '&:hover': {
-                    bgcolor: 'rgba(255, 255, 255, 0.1)'
+                    bgcolor: 'rgba(255, 15, 80, 0.1)'
                   }
                 }}
               >
@@ -159,7 +164,12 @@ const Header: FC = () => {
               <IconButton 
                 color="inherit" 
                 onClick={handleLogout}
-                sx={{ color: '#fff' }} 
+                sx={{ 
+                  color: '#fff',
+                  '&:hover': {
+                    bgcolor: 'rgba(255, 15, 80, 0.1)'
+                  } 
+                }} 
                 aria-label="logout"
               >
                 <LogoutIcon />
@@ -167,7 +177,21 @@ const Header: FC = () => {
             </>
           )}
           
-         
+          {/* Theme toggle */}
+          <IconButton 
+            color="inherit" 
+            onClick={toggleTheme} 
+            sx={{ 
+              ml: 1,
+              color: '#FF69B4',
+              '&:hover': {
+                bgcolor: 'rgba(255, 15, 80, 0.1)'
+              }
+            }}
+            aria-label="toggle theme"
+          >
+            {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+          </IconButton>
         </Box>
       </Toolbar>
     </AppBar>

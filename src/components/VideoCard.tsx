@@ -9,6 +9,7 @@ import Box from '@mui/material/Box';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import LockIcon from '@mui/icons-material/Lock';
 import Skeleton from '@mui/material/Skeleton';
 import { VideoService } from '../services/VideoService';
 
@@ -107,13 +108,16 @@ const VideoCard: FC<VideoCardProps> = ({ video }) => {
         display: 'flex', 
         flexDirection: 'column',
         transition: 'all 0.3s ease',
-        borderRadius: '8px',
+        borderRadius: '12px',
         overflow: 'hidden',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        boxShadow: theme => `0 8px 20px ${theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.15)'}`,
         cursor: 'pointer',
+        backgroundColor: theme => theme.palette.mode === 'dark' ? '#121212' : '#ffffff',
+        border: '1px solid rgba(255,15,80,0.1)',
         '&:hover': {
-          transform: 'translateY(-8px)',
-          boxShadow: '0 12px 24px rgba(0,0,0,0.15)',
+          transform: 'translateY(-10px) scale(1.02)',
+          boxShadow: '0 16px 30px rgba(0,0,0,0.25)',
+          borderColor: '#FF0F50',
         }
       }}
       onClick={handleCardClick}
@@ -133,12 +137,13 @@ const VideoCard: FC<VideoCardProps> = ({ video }) => {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              backgroundColor: '#f0f0f0',
+              backgroundColor: '#0A0A0A',
+              filter: 'brightness(0.9)',
             }}
             onError={(e) => {
               // Fallback if image fails to load
               const target = e.target as HTMLImageElement;
-              target.src = 'https://via.placeholder.com/300x180?text=Video+Thumbnail';
+              target.src = 'https://via.placeholder.com/300x180?text=Adult+Content';
             }}
           />
         ) : (
@@ -150,11 +155,28 @@ const VideoCard: FC<VideoCardProps> = ({ video }) => {
               left: 0,
               width: '100%',
               height: '100%',
-              backgroundColor: '#f0f0f0',
+              backgroundColor: '#0A0A0A',
             }} 
             animation="wave" 
           />
         )}
+        
+        {/* Adult content indicator */}
+        <Chip 
+          label="18+" 
+          size="small" 
+          sx={{ 
+            position: 'absolute', 
+            top: 8, 
+            left: 8, 
+            backgroundColor: '#FF0F50',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '0.7rem',
+            height: '22px',
+            zIndex: 2,
+          }}
+        />
         
         {/* Hover overlay */}
         <Box
@@ -164,26 +186,33 @@ const VideoCard: FC<VideoCardProps> = ({ video }) => {
             left: 0,
             width: '100%',
             height: '100%',
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.3) 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            opacity: isHovered ? 1 : 0,
-            transition: 'opacity 0.3s ease',
+            opacity: isHovered ? 1 : 0.4,
+            transition: 'all 0.3s ease',
           }}
         >
           <Box
             sx={{
-              width: '60px',
-              height: '60px',
+              width: '70px',
+              height: '70px',
               borderRadius: '50%',
-              backgroundColor: 'rgba(255,255,255,0.2)',
+              backgroundColor: 'rgba(255,15,80,0.7)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              transform: isHovered ? 'scale(1.1)' : 'scale(0.9)',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             }}
           >
-            <PlayArrowIcon sx={{ fontSize: 40, color: 'white' }} />
+            {video.isPurchased ? (
+              <PlayArrowIcon sx={{ fontSize: 45, color: 'white' }} />
+            ) : (
+              <LockIcon sx={{ fontSize: 35, color: 'white' }} />
+            )}
           </Box>
         </Box>
         
@@ -196,7 +225,7 @@ const VideoCard: FC<VideoCardProps> = ({ video }) => {
               position: 'absolute', 
               bottom: 8, 
               right: 8, 
-              backgroundColor: 'rgba(0,0,0,0.7)',
+              backgroundColor: 'rgba(0,0,0,0.8)',
               color: 'white',
               fontWeight: 'bold',
               height: '24px',
@@ -218,7 +247,11 @@ const VideoCard: FC<VideoCardProps> = ({ video }) => {
             top: 8, 
             right: 8, 
             fontWeight: 'bold',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+            backgroundColor: '#FF0F50',
+            '& .MuiChip-label': {
+              color: 'white'
+            }
           }}
         />
       </Box>
@@ -235,12 +268,13 @@ const VideoCard: FC<VideoCardProps> = ({ video }) => {
           display: '-webkit-box',
           WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
+          color: theme => theme.palette.mode === 'dark' ? 'white' : 'text.primary',
         }}>
           {video.title}
         </Typography>
         
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: theme => theme.palette.mode === 'dark' ? '#FF69B4' : 'text.secondary' }}>
             <VisibilityIcon sx={{ fontSize: 16 }} />
             <Typography variant="caption">
               {formatViews(video.views)}
@@ -248,7 +282,7 @@ const VideoCard: FC<VideoCardProps> = ({ video }) => {
           </Box>
           
           {video.createdAt && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {formatDate(video.createdAt)}
             </Typography>
           )}
