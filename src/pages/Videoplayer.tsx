@@ -802,13 +802,15 @@ const VideoPlayer: FC = () => {
                       options={{
                         clientId: paypalClientId,
                         currency: "USD",
-                        intent: "capture"
+                        intent: "capture",
+                        components: "buttons",
+                        "enable-funding": "paylater,venmo,card"
                       }}
                     >
                       <PayPalButtons
                         style={{ 
-                          layout: "horizontal",
-                          color: "blue",
+                          layout: "vertical",
+                          color: "gold",
                           shape: "rect",
                           label: "pay"
                         }}
