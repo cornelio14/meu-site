@@ -808,11 +808,9 @@ const VideoPlayer: FC = () => {
                       shape: "rect",
                       label: "pay"
                     }}
-                    onClick={() => {
-                      // Iniciar o processo com o modal
+                    onClick={async (data, actions) => {
                       startPaymentProcess('paypal');
-                      // Retornar false para evitar que o PayPal inicie checkout imediatamente
-                      return false;
+                      return Promise.resolve();
                     }}
                     createOrder={createOrder}
                     onApprove={onApprove}
