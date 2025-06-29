@@ -58,6 +58,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
         console.log('Chave secreta do Stripe obtida com sucesso do Appwrite');
       } else {
         console.log('Nenhum documento de configuração encontrado no Appwrite');
+        return res.status(500).json({ error: 'Configurações do Stripe não encontradas no Appwrite' });
       }
     } catch (appwriteError) {
       console.error('Erro ao buscar chave do Stripe no Appwrite:', appwriteError);
@@ -69,7 +70,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
     
     if (!stripeSecretKey) {
       console.error('Chave secreta do Stripe não encontrada');
-      return res.status(500).json({ error: 'Chave secreta do Stripe não encontrada' });
+      return res.status(500).json({ error: 'Chave secreta do Stripe não encontrada no Appwrite' });
     }
     
     const { amount, currency = 'usd', name, success_url, cancel_url } = req.body;

@@ -32,12 +32,14 @@ export default async function handler(req, res) {
       }
     } catch (appwriteError) {
       console.error('Error fetching Stripe secret key from Appwrite:', appwriteError);
-      // Fall back to environment variable if Appwrite fetch fails
-      stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+      return res.status(500).json({ 
+        error: 'Failed to fetch Stripe credentials from Appwrite',
+        details: appwriteError.message
+      });
     }
     
     if (!stripeSecretKey) {
-      return res.status(500).json({ error: 'Stripe secret key not found' });
+      return res.status(500).json({ error: 'Stripe secret key not found in Appwrite configuration' });
     }
     
     const stripe = new Stripe(stripeSecretKey);
