@@ -801,24 +801,31 @@ const VideoPlayer: FC = () => {
               <Grid container spacing={2} justifyContent="center" alignItems="center" sx={{ mb: 2 }}>
                 {/* PayPal Payment Button */}
                 {paypalClientId && (
-                  <PayPalButtons
-                    style={{ 
-                      layout: "horizontal",
-                      color: "blue",
-                      shape: "rect",
-                      label: "pay"
+                  <PayPalScriptProvider 
+                    options={{
+                      "client-id": paypalClientId || "test",
+                      currency: "USD"
                     }}
-                    onClick={async (data, actions) => {
-                      startPaymentProcess('paypal');
-                      return Promise.resolve();
-                    }}
-                    createOrder={createOrder}
-                    onApprove={onApprove}
-                    onError={(err) => {
-                      console.error('PayPal Error:', err);
-                      setPurchaseError('PayPal payment failed. Please try again later.');
-                    }}
-                  />
+                  >
+                    <PayPalButtons
+                      style={{ 
+                        layout: "horizontal",
+                        color: "blue",
+                        shape: "rect",
+                        label: "pay"
+                      }}
+                      onClick={async (data, actions) => {
+                        startPaymentProcess('paypal');
+                        return Promise.resolve();
+                      }}
+                      createOrder={createOrder}
+                      onApprove={onApprove}
+                      onError={(err) => {
+                        console.error('PayPal Error:', err);
+                        setPurchaseError('PayPal payment failed. Please try again later.');
+                      }}
+                    />
+                  </PayPalScriptProvider>
                 )}
                 
                 {/* Stripe Button - Show if not purchased and Stripe publishable key is available */}
