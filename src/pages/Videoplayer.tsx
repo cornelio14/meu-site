@@ -578,11 +578,7 @@ const VideoPlayer: FC = () => {
     );
   }
 
-  const paypalOptions = {
-    clientId: paypalClientId || "test",
-    currency: "USD",
-    intent: "capture",
-  };
+  // Removed unused paypalOptions as it's directly configured in PayPalScriptProvider
 
   return (
       <Box sx={{ 
@@ -801,31 +797,30 @@ const VideoPlayer: FC = () => {
               <Grid container spacing={2} justifyContent="center" alignItems="center" sx={{ mb: 2 }}>
                 {/* PayPal Payment Button */}
                 {paypalClientId && (
-                  <PayPalScriptProvider 
-                    options={{
-                      clientId: paypalClientId || "test",
-                      currency: "USD"
-                    }}
-                  >
-                    <PayPalButtons
-                      style={{ 
-                        layout: "horizontal",
-                        color: "blue",
-                        shape: "rect",
-                        label: "pay"
+                  <Grid item xs={12}>
+                    <PayPalScriptProvider 
+                      options={{
+                        clientId: paypalClientId,
+                        currency: "USD",
+                        intent: "capture"
                       }}
-                      onClick={async (data, actions) => {
-                        startPaymentProcess('paypal');
-                        return Promise.resolve();
-                      }}
-                      createOrder={createOrder}
-                      onApprove={onApprove}
-                      onError={(err) => {
-                        console.error('PayPal Error:', err);
-                        setPurchaseError('PayPal payment failed. Please try again later.');
-                      }}
-                    />
-                  </PayPalScriptProvider>
+                    >
+                      <PayPalButtons
+                        style={{ 
+                          layout: "horizontal",
+                          color: "blue",
+                          shape: "rect",
+                          label: "pay"
+                        }}
+                        onClick={async (data, actions) => {
+                          startPaymentProcess('paypal');
+                          return Promise.resolve();
+                        }}
+                        createOrder={createOrder}
+                        onApprove={onApprove}
+                      />
+                    </PayPalScriptProvider>
+                  </Grid>
                 )}
                 
                 {/* Stripe Button - Show if not purchased and Stripe publishable key is available */}
