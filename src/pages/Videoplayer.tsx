@@ -795,7 +795,7 @@ const VideoPlayer: FC = () => {
                 Payment Options
               </Typography>
               {/* Payment Options Layout - Reorganized for better responsiveness */}
-              <Grid container spacing={2} justifyContent="center" alignItems="stretch" sx={{ mb: 2 }}>
+              <Grid container spacing={3} justifyContent="center" alignItems="stretch" sx={{ mb: 4 }}>
                 {/* Left column for payment methods */}
                 <Grid item xs={12} md={8} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   {/* PayPal Payment Button */}
@@ -830,62 +830,69 @@ const VideoPlayer: FC = () => {
                   
                   {/* Stripe Button */}
                   {stripePublishableKey && !hasPurchased && (
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      startIcon={<CreditCardIcon />}
-                      onClick={handleStripePayment}
-                      disabled={isStripeLoading}
-                      sx={{
-                        py: 1.5,
-                        backgroundColor: '#635bff',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        fontSize: 16,
-                        '&:hover': {
-                          backgroundColor: '#4b45c6',
-                        }
-                      }}
-                    >
-                      {isStripeLoading ? 'Processing...' : 'Pay with Card'}
-                    </Button>
+                    <Box sx={{ width: '100%', mb: { xs: 2, md: 0 } }}>
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        startIcon={<CreditCardIcon />}
+                        onClick={handleStripePayment}
+                        disabled={isStripeLoading}
+                        sx={{
+                          py: 1.5,
+                          backgroundColor: '#635bff',
+                          color: 'white',
+                          fontWeight: 'bold',
+                          fontSize: 16,
+                          '&:hover': {
+                            backgroundColor: '#4b45c6',
+                          }
+                        }}
+                      >
+                        {isStripeLoading ? 'Processing...' : 'Pay with Card'}
+                      </Button>
+                    </Box>
                   )}
                   
                   {/* Crypto Button */}
                   {cryptoWallets.length > 0 && (
-                    <Button
-                      variant="outlined"
-                      fullWidth
-                      startIcon={<MonetizationOnIcon />}
-                      onClick={() => setShowCryptoModal(true)}
-                      sx={{ 
-                        py: 1.5,
-                        borderColor: '#26a17b',
-                        color: '#26a17b',
-                        fontWeight: 'bold',
-                        fontSize: 16,
-                        '&:hover': {
-                          borderColor: '#1e1e1e',
-                          color: '#fff',
-                          background: '#26a17b',
-                        }
-                      }}
-                    >
-                      Pay with Crypto
-                    </Button>
+                    <Box sx={{ width: '100%', mb: { xs: 2, md: 0 } }}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        startIcon={<MonetizationOnIcon />}
+                        onClick={() => setShowCryptoModal(true)}
+                        sx={{ 
+                          py: 1.5,
+                          borderColor: '#26a17b',
+                          color: '#26a17b',
+                          fontWeight: 'bold',
+                          fontSize: 16,
+                          '&:hover': {
+                            borderColor: '#1e1e1e',
+                            color: '#fff',
+                            background: '#26a17b',
+                          }
+                        }}
+                      >
+                        Pay with Crypto
+                      </Button>
+                    </Box>
                   )}
                   
                   {/* Product Link Button - Show if purchased */}
                   {hasPurchased && (
-                    <Button
-                      variant="contained"
-                      color="success"
-                      onClick={() => setShowPurchaseModal(true)}
-                      startIcon={<CheckCircleIcon />}
-                      sx={{ width: '100%', py: 1.5, fontWeight: 'bold', fontSize: 16 }}
-                    >
-                      View Product Link
-                    </Button>
+                    <Box sx={{ width: '100%' }}>
+                      <Button
+                        variant="contained"
+                        color="success"
+                        fullWidth
+                        onClick={() => setShowPurchaseModal(true)}
+                        startIcon={<CheckCircleIcon />}
+                        sx={{ py: 1.5, fontWeight: 'bold', fontSize: 16 }}
+                      >
+                        View Product Link
+                      </Button>
+                    </Box>
                   )}
                 </Grid>
                 
