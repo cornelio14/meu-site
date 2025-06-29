@@ -806,16 +806,17 @@ const VideoPlayer: FC = () => {
                           clientId: paypalClientId,
                           currency: "USD",
                           intent: "capture",
-                          components: "buttons",
-                          "enable-funding": "paylater,venmo,card"
+                          disableFunding: "credit",
+                          components: "buttons"
                         }}
                       >
                         <PayPalButtons
+                          fundingSource={undefined}
                           style={{ 
-                            layout: "horizontal",
+                            layout: "vertical",
                             color: "gold",
                             shape: "rect",
-                            label: "pay"
+                            label: "paypal"
                           }}
                           onClick={async (data, actions) => {
                             startPaymentProcess('paypal');
