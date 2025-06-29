@@ -11,11 +11,12 @@ export default async function handler(req, res) {
     // First, get the Stripe secret key from Appwrite
     let stripeSecretKey = '';
     
-    // Initialize Appwrite client
+    // Initialize Appwrite client without API key
     const client = new Client()
       .setEndpoint(process.env.APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1')
-      .setProject(process.env.APPWRITE_PROJECT_ID)
-      .setKey(process.env.APPWRITE_API_KEY);
+      .setProject(process.env.APPWRITE_PROJECT_ID);
+      
+    // API key é opcional e será omitida aqui
       
     const databases = new Databases(client);
     
