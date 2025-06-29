@@ -794,40 +794,42 @@ const VideoPlayer: FC = () => {
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', letterSpacing: 1, textAlign: 'center', color: theme.palette.mode === 'dark' ? '#fff' : '#222' }}>
                 Payment Options
               </Typography>
-              <Grid container spacing={2} justifyContent="center" alignItems="center" sx={{ mb: 2 }}>
-                {/* PayPal Payment Button */}
-                {paypalClientId && (
-                  <Grid item xs={12}>
-                    <PayPalScriptProvider 
-                      options={{
-                        clientId: paypalClientId,
-                        currency: "USD",
-                        intent: "capture",
-                        components: "buttons",
-                        "enable-funding": "paylater,venmo,card"
-                      }}
-                    >
-                      <PayPalButtons
-                        style={{ 
-                          layout: "vertical",
-                          color: "gold",
-                          shape: "rect",
-                          label: "pay"
+              {/* Payment Options Layout - Reorganized for better responsiveness */}
+              <Grid container spacing={2} justifyContent="center" alignItems="stretch" sx={{ mb: 2 }}>
+                {/* Left column for payment methods */}
+                <Grid item xs={12} md={8} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {/* PayPal Payment Button */}
+                  {paypalClientId && (
+                    <Box sx={{ width: '100%', mb: { xs: 2, md: 0 } }}>
+                      <PayPalScriptProvider 
+                        options={{
+                          clientId: paypalClientId,
+                          currency: "USD",
+                          intent: "capture",
+                          components: "buttons",
+                          "enable-funding": "paylater,venmo,card"
                         }}
-                        onClick={async (data, actions) => {
-                          startPaymentProcess('paypal');
-                          return Promise.resolve();
-                        }}
-                        createOrder={createOrder}
-                        onApprove={onApprove}
-                      />
-                    </PayPalScriptProvider>
-                  </Grid>
-                )}
-                
-                {/* Stripe Button - Show if not purchased and Stripe publishable key is available */}
-                {stripePublishableKey && !hasPurchased && (
-                  <Grid item xs={12} sm={6} md={4}>
+                      >
+                        <PayPalButtons
+                          style={{ 
+                            layout: "horizontal",
+                            color: "gold",
+                            shape: "rect",
+                            label: "pay"
+                          }}
+                          onClick={async (data, actions) => {
+                            startPaymentProcess('paypal');
+                            return Promise.resolve();
+                          }}
+                          createOrder={createOrder}
+                          onApprove={onApprove}
+                        />
+                      </PayPalScriptProvider>
+                    </Box>
+                  )}
+                  
+                  {/* Stripe Button */}
+                  {stripePublishableKey && !hasPurchased && (
                     <Button
                       variant="contained"
                       fullWidth
@@ -847,33 +849,16 @@ const VideoPlayer: FC = () => {
                     >
                       {isStripeLoading ? 'Processing...' : 'Pay with Card'}
                     </Button>
-                  </Grid>
-                )}
-              
-                {/* Product Link Button - Show if purchased */}
-              {hasPurchased && (
-                  <Grid item xs={12} sm={6} md={4}>
-                <Button
-                  variant="contained"
-                  color="success"
-                  onClick={() => setShowPurchaseModal(true)}
-                  startIcon={<CheckCircleIcon />}
-                      sx={{ width: '100%', py: 1.5, fontWeight: 'bold', fontSize: 16 }}
-                    >
-                      View Product Link
-                    </Button>
-                  </Grid>
-                )}
-                
-                {/* Crypto Button - Show if crypto wallets are available */}
-                {cryptoWallets.length > 0 && (
-                  <Grid item xs={12} sm={6} md={4}>
+                  )}
+                  
+                  {/* Crypto Button */}
+                  {cryptoWallets.length > 0 && (
                     <Button
                       variant="outlined"
                       fullWidth
                       startIcon={<MonetizationOnIcon />}
                       onClick={() => setShowCryptoModal(true)}
-                  sx={{ 
+                      sx={{ 
                         py: 1.5,
                         borderColor: '#26a17b',
                         color: '#26a17b',
@@ -887,35 +872,49 @@ const VideoPlayer: FC = () => {
                       }}
                     >
                       Pay with Crypto
-                </Button>
-                  </Grid>
-                )}
-              
-                {/* Telegram Button - Show if telegram username is available */}
-              {telegramUsername && (
-                  <Grid item xs={12} sm={6} md={4}>
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  startIcon={<TelegramIcon />}
-                  onClick={handleTelegramRedirect}
-                  sx={{ 
-                    py: 1.5,
+                    </Button>
+                  )}
+                  
+                  {/* Product Link Button - Show if purchased */}
+                  {hasPurchased && (
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={() => setShowPurchaseModal(true)}
+                      startIcon={<CheckCircleIcon />}
+                      sx={{ width: '100%', py: 1.5, fontWeight: 'bold', fontSize: 16 }}
+                    >
+                      View Product Link
+                    </Button>
+                  )}
+                </Grid>
+                
+                {/* Right column for telegram contact */}
+                {telegramUsername && (
+                  <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      startIcon={<TelegramIcon />}
+                      onClick={handleTelegramRedirect}
+                      sx={{ 
+                        py: 1.5,
+                        height: '100%',
                         borderColor: '#229ED9',
                         color: '#229ED9',
                         fontWeight: 'bold',
                         fontSize: 16,
-                    '&:hover': {
+                        '&:hover': {
                           borderColor: '#229ED9',
                           color: '#fff',
                           background: '#229ED9',
-                    }
-                  }}
-                >
-                  Contact on Telegram
-                </Button>
+                        }
+                      }}
+                    >
+                      Contact on Telegram
+                    </Button>
                   </Grid>
-              )}
+                )}
               </Grid>
             </Box>
         </Box>
