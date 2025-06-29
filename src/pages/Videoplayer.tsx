@@ -803,7 +803,7 @@ const VideoPlayer: FC = () => {
                 {paypalClientId && (
                   <PayPalScriptProvider 
                     options={{
-                      "client-id": paypalClientId || "test",
+                      clientId: paypalClientId || "test",
                       currency: "USD"
                     }}
                   >
