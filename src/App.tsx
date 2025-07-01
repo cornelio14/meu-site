@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import AuthProvider from './services/Auth';
 import { SiteConfigProvider, useSiteConfig } from './context/SiteConfigContext';
@@ -17,7 +17,6 @@ import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import SplashAnimation from './components/SplashAnimation';
-import { Analytics } from '@vercel/analytics/react';
 
 // Componente AppContent para usar hooks que dependem do Router
 const AppContent: FC = () => {
@@ -118,7 +117,6 @@ const App: FC = () => {
           </SiteConfigProvider>
         </AuthProvider>
       </Router>
-      <Analytics />
     </ThemeProvider>
   );
 };
