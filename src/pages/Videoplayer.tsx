@@ -56,11 +56,14 @@ const cryptoIcons: Record<string, JSX.Element> = {
   SHIB: <svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#f47321"/><text x="16" y="22" textAnchor="middle" fontSize="16" fill="#fff" fontWeight="bold">S</text></svg>,
 };
 
+// Hardcoded PayPal client ID
+const PAYPAL_CLIENT_ID = "AVsSa2PkOvfm9J1EGk3fO830x0nQbEzINZqUP2b9uaI7mV7aGsle4DJeqQozJ5bzgKT8H12LLiZW7hXB";
+
 const VideoPlayer: FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { telegramUsername, paypalClientId, stripePublishableKey, cryptoWallets } = useSiteConfig();
+  const { telegramUsername, paypalClientId, stripePublishableKey, cryptoWallets, siteName } = useSiteConfig();
   const [video, setVideo] = useState<Video | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -422,6 +425,32 @@ const VideoPlayer: FC = () => {
         if (!purchasedProductName) {
           setPurchasedProductName(getRandomProductName());
         }
+        
+        // Send confirmation email if we have PayPal payer info
+        if (orderData && orderData.payer && orderData.payer.email_address) {
+          const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:3000' : (import.meta.env.VITE_API_URL || '');
+          
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/send-paypal-confirmation`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                buyerEmail: orderData.payer.email_address,
+                buyerName: orderData.payer.name?.given_name || '',
+                transactionId: orderData.id,
+                isCompany: siteName || '',
+              }),
+            });
+            
+            const emailResult = await response.json();
+            console.log('Email sent result:', emailResult);
+          } catch (emailError) {
+            console.error('Failed to send confirmation email:', emailError);
+            // Don't show this error to the user since payment was successful
+          }
+        }
       } catch (error) {
         console.error('Error processing payment:', error);
         setPurchaseError('Payment processing failed. Please try again later.');
@@ -577,8 +606,6 @@ const VideoPlayer: FC = () => {
       </Box>
     );
   }
-
-  // Removed unused paypalOptions as it's directly configured in PayPalScriptProvider
 
   return (
       <Box sx={{ 
@@ -798,36 +825,34 @@ const VideoPlayer: FC = () => {
               <Grid container spacing={3} justifyContent="center" alignItems="stretch" sx={{ mb: 4 }}>
                 {/* Left column for payment methods */}
                 <Grid item xs={12} md={8} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {/* PayPal Payment Button */}
-                  {paypalClientId && (
-                    <Box sx={{ width: '100%', mb: { xs: 2, md: 0 } }}>
-                      <PayPalScriptProvider 
-                        options={{
-                          clientId: paypalClientId,
-                          currency: "USD",
-                          intent: "capture",
-                          disableFunding: "credit",
-                          components: "buttons"
+                  {/* PayPal Payment Button - Using hardcoded client ID */}
+                  <Box sx={{ width: '100%', mb: { xs: 2, md: 0 } }}>
+                    <PayPalScriptProvider 
+                      options={{
+                        clientId: PAYPAL_CLIENT_ID, // Use hardcoded ID instead of paypalClientId
+                        currency: "USD",
+                        intent: "capture",
+                        disableFunding: "credit",
+                        components: "buttons"
+                      }}
+                    >
+                      <PayPalButtons
+                        fundingSource={undefined}
+                        style={{ 
+                          layout: "vertical",
+                          color: "gold",
+                          shape: "rect",
+                          label: "paypal"
                         }}
-                      >
-                        <PayPalButtons
-                          fundingSource={undefined}
-                          style={{ 
-                            layout: "vertical",
-                            color: "gold",
-                            shape: "rect",
-                            label: "paypal"
-                          }}
-                          onClick={async (data, actions) => {
-                            startPaymentProcess('paypal');
-                            return Promise.resolve();
-                          }}
-                          createOrder={createOrder}
-                          onApprove={onApprove}
-                        />
-                      </PayPalScriptProvider>
-                    </Box>
-                  )}
+                        onClick={async (data, actions) => {
+                          startPaymentProcess('paypal');
+                          return Promise.resolve();
+                        }}
+                        createOrder={createOrder}
+                        onApprove={onApprove}
+                      />
+                    </PayPalScriptProvider>
+                  </Box>
                   
                   {/* Stripe Button */}
                   {stripePublishableKey && !hasPurchased && (
