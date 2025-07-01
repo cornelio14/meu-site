@@ -1,20 +1,29 @@
 services:
   - type: web
     name: leakstuff
-    runtime: node
-    plan: starter
+    runtime: static
     buildCommand: npm ci && npm run build
-    startCommand: NODE_ENV=production node server.js
+    staticPublishPath: ./dist
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3000
     headers:
       - path: /*
         name: Cache-Control
         value: public, max-age=0, must-revalidate
     routes:
+      - type: redirect
+        source: /admin
+        destination: /
+      - type: redirect
+        source: /login
+        destination: /
+      - type: redirect
+        source: /videos
+        destination: /
+      - type: redirect
+        source: /video/:path*
+        destination: /
       - type: rewrite
         source: /*
         destination: /index.html
