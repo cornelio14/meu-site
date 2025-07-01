@@ -14,7 +14,8 @@
         if (window.location.hash) return;
         
         const path = window.location.pathname.split('/');
-        const isRouteRequest = path.length > 1 && path[1].length > 0 && !path[1].includes('.');
+        const isRouteRequest = path.length > 1 && path[1].length > 0 && !path[1].includes('.') && 
+                              !path[1].startsWith('_vercel'); // Não redirecionar requisições do Vercel
         
         // Only redirect if this is a route request and not a file request
         if (isRouteRequest && path[1] !== 'index.html') {

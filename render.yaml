@@ -12,6 +12,12 @@ services:
         name: Cache-Control
         value: public, max-age=0, must-revalidate
     routes:
+      - type: response
+        source: /_vercel/**
+        status: 404
+        headers:
+          Content-Type: text/plain
+        content: 'Not Found'
       - type: redirect
         source: /admin
         destination: /
