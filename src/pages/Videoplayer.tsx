@@ -56,8 +56,7 @@ const cryptoIcons: Record<string, JSX.Element> = {
   SHIB: <svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#f47321"/><text x="16" y="22" textAnchor="middle" fontSize="16" fill="#fff" fontWeight="bold">S</text></svg>,
 };
 
-// Hardcoded PayPal client ID
-const PAYPAL_CLIENT_ID = "AVsSa2PkOvfm9J1EGk3fO830x0nQbEzINZqUP2b9uaI7mV7aGsle4DJeqQozJ5bzgKT8H12LLiZW7hXB";
+
 
 const VideoPlayer: FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -829,7 +828,7 @@ const VideoPlayer: FC = () => {
                   <Box sx={{ width: '100%', mb: { xs: 2, md: 0 } }}>
                     <PayPalScriptProvider 
                       options={{
-                        clientId: PAYPAL_CLIENT_ID, // Use hardcoded ID instead of paypalClientId
+                        clientId: paypalClientId,
                         currency: "USD",
                         intent: "capture",
                         disableFunding: "credit",
