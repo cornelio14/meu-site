@@ -18,6 +18,6 @@
     "verbatimModuleSyntax": false,
     "forceConsistentCasingInFileNames": false
   },
-  "include": ["src"],
+  "include": ["src/**/*.tsx", "src/**/*.ts", "src/**/*.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
