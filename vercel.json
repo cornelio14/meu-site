@@ -1,5 +1,9 @@
 {
   "rewrites": [
+    { "source": "/admin", "destination": "/" },
+    { "source": "/login", "destination": "/" },
+    { "source": "/videos", "destination": "/" },
+    { "source": "/video/:id", "destination": "/" },
     { "source": "/(.*)", "destination": "/" }
   ],
   "functions": {

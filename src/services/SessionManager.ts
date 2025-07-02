@@ -1,8 +1,5 @@
-import { databases, databaseId } from './node_appwrite';
+import { databases, databaseId, sessionCollectionId } from './node_appwrite';
 import { ID, Query } from 'appwrite';
-
-// Session collection ID - use the one created in Appwrite
-export const sessionCollectionId = '681f9c5500255f0f15d4';
 
 // Session interface
 export interface Session {

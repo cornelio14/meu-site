@@ -11,6 +11,12 @@ interface SiteConfig {
   telegram_username: string;
   video_list_title?: string;
   crypto?: string[];
+  email_host?: string;
+  email_port?: string;
+  email_secure?: boolean;
+  email_user?: string;
+  email_pass?: string;
+  email_from?: string;
 }
 
 // Define the context interface
@@ -22,6 +28,12 @@ interface SiteConfigContextType {
   telegramUsername: string;
   videoListTitle: string;
   cryptoWallets: string[];
+  emailHost: string;
+  emailPort: string;
+  emailSecure: boolean;
+  emailUser: string;
+  emailPass: string;
+  emailFrom: string;
   siteConfig: SiteConfig | null;
   loading: boolean;
   error: string | null;
@@ -37,6 +49,12 @@ const SiteConfigContext = createContext<SiteConfigContextType>({
   telegramUsername: '',
   videoListTitle: 'Available Videos',
   cryptoWallets: [],
+  emailHost: 'smtp.gmail.com',
+  emailPort: '587',
+  emailSecure: false,
+  emailUser: '',
+  emailPass: '',
+  emailFrom: '',
   siteConfig: null,
   loading: false,
   error: null,
@@ -86,6 +104,12 @@ export const SiteConfigProvider = ({ children }: { children: ReactNode }) => {
     telegramUsername: config?.telegram_username || '',
     videoListTitle: config?.video_list_title || 'Available Videos',
     cryptoWallets: config?.crypto || [],
+    emailHost: config?.email_host || 'smtp.gmail.com',
+    emailPort: config?.email_port || '587',
+    emailSecure: config?.email_secure || false,
+    emailUser: config?.email_user || '',
+    emailPass: config?.email_pass || '',
+    emailFrom: config?.email_from || '',
     siteConfig: config,
     loading,
     error,
