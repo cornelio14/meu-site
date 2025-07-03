@@ -33,12 +33,14 @@ export class VideoService {
   static async getAllVideos(sortOption: SortOption = SortOption.NEWEST, searchQuery: string = ''): Promise<Video[]> {
     try {
       // Get all videos first (without search query)
+      console.log('Fetching all videos from collection');
       const response = await databases.listDocuments(
         databaseId,
         videoCollectionId,
         []
       );
       
+      console.log(`Found ${response.documents.length} videos in database`);
       let videos = response.documents as unknown as Video[];
       
       // Apply client-side search if query is provided
@@ -54,6 +56,9 @@ export class VideoService {
       for (const video of videos) {
         // Check for both naming conventions
         const thumbnailId = video.thumbnailFileId || video.thumbnail_id;
+        
+        // Log video details for debugging
+        console.log(`Processing video ${video.$id}: title=${video.title}, video_id=${video.video_id}, videoFileId=${video.videoFileId}, thumbnail_id=${video.thumbnail_id}, thumbnailFileId=${video.thumbnailFileId}`);
         
         if (thumbnailId) {
           try {
@@ -122,6 +127,9 @@ export class VideoService {
         videoCollectionId,
         videoId
       ) as unknown as Video;
+      
+      // Log video details for debugging
+      console.log(`Getting video ${videoId}: title=${video.title}, video_id=${video.video_id}, videoFileId=${video.videoFileId}, thumbnail_id=${video.thumbnail_id}, thumbnailFileId=${video.thumbnailFileId}`);
       
       // Get thumbnail URL
       // Check for both naming conventions
