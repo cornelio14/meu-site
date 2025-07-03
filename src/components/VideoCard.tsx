@@ -24,6 +24,7 @@ interface VideoCardProps {
     duration?: string | number;
     views?: number;
     createdAt?: string;
+    created_at?: string;
   };
 }
 
@@ -100,6 +101,9 @@ const VideoCard: FC<VideoCardProps> = ({ video }) => {
     if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
     return `${Math.floor(diffDays / 365)} years ago`;
   };
+
+  // Ajuste para lidar com formato created_at ou createdAt
+  const createdAtField = video.createdAt || video.created_at;
 
   return (
     <Card 
@@ -281,9 +285,9 @@ const VideoCard: FC<VideoCardProps> = ({ video }) => {
             </Typography>
           </Box>
           
-          {video.createdAt && (
+          {createdAtField && (
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {formatDate(video.createdAt)}
+              {formatDate(createdAtField)}
             </Typography>
           )}
         </Box>

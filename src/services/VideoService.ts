@@ -29,21 +29,88 @@ export enum SortOption {
 }
 
 export class VideoService {
+  // Método para normalizar os objetos de vídeo
+  private static normalizeVideo(video: any): Video {
+    // Converter duration (inteiro em segundos) para formato string (MM:SS ou HH:MM:SS)
+    let formattedDuration = '00:00';
+    if (typeof video.duration === 'number') {
+      const totalSeconds = video.duration;
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      
+      if (minutes < 60) {
+        formattedDuration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      } else {
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        formattedDuration = `${hours.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      }
+    }
+    
+    // Garantir consistência nos campos - mapeando do esquema do banco para o formato esperado pelo frontend
+    return {
+      $id: video.$id,
+      title: video.title || 'Untitled',
+      description: video.description || '',
+      price: typeof video.price === 'number' ? video.price : parseFloat(video.price || '0'),
+      duration: video.duration ? formattedDuration : '00:00', // Converter de inteiro para string formatada
+      videoFileId: video.video_id || null, // Mapear video_id para videoFileId no frontend
+      video_id: video.video_id || null, // Manter video_id para compatibilidade interna
+      thumbnailFileId: video.thumbnail_id || null, // Mapear thumbnail_id para thumbnailFileId no frontend
+      thumbnail_id: video.thumbnail_id || null, // Manter thumbnail_id para compatibilidade interna
+      thumbnailUrl: video.thumbnailUrl || null,
+      isPurchased: video.isPurchased || false,
+      createdAt: video.created_at || new Date().toISOString(), // Mapear created_at para createdAt no frontend
+      views: typeof video.views === 'number' ? video.views : 0,
+      product_link: video.product_link || ''
+    };
+  }
+
   // Get all videos with sorting options
   static async getAllVideos(sortOption: SortOption = SortOption.NEWEST, searchQuery: string = ''): Promise<Video[]> {
     try {
-      // Get all videos first (without search query)
-      console.log('Fetching all videos from collection');
-      const response = await databases.listDocuments(
-        databaseId,
-        videoCollectionId,
-        []
-      );
+      console.log('Buscando todos os vídeos da coleção com paginação');
       
-      console.log(`Found ${response.documents.length} videos in database`);
-      let videos = response.documents as unknown as Video[];
+      // Array para armazenar todos os vídeos
+      let allVideos: any[] = [];
       
-      // Apply client-side search if query is provided
+      // No Appwrite, usamos Query para paginação
+      let currentPage = 1;
+      let hasMorePages = true;
+      const limit = 100; // Aumentar o tamanho da página para reduzir o número de chamadas
+      
+      while (hasMorePages) {
+        console.log(`Buscando página ${currentPage} de vídeos (limit: ${limit})`);
+        
+        // Use Query.limit() e Query.offset() para paginação
+        const queries = [
+          Query.limit(limit),
+          Query.offset((currentPage - 1) * limit)
+        ];
+        
+        const response = await databases.listDocuments(
+          databaseId,
+          videoCollectionId,
+          queries
+        );
+        
+        // Adicionar documentos da página atual ao array de todos os vídeos
+        allVideos = [...allVideos, ...response.documents];
+        
+        console.log(`Encontrados ${response.documents.length} vídeos na página ${currentPage}`);
+        console.log(`Total acumulado: ${allVideos.length} vídeos`);
+        
+        // Verificar se há mais páginas
+        hasMorePages = response.documents.length === limit;
+        currentPage++;
+      }
+      
+      console.log(`Total final: ${allVideos.length} vídeos encontrados no banco de dados`);
+      
+      // Normalizar todos os vídeos
+      let videos = allVideos.map(doc => this.normalizeVideo(doc));
+      
+      // Aplicar pesquisa do lado do cliente se a consulta for fornecida
       if (searchQuery && searchQuery.trim() !== '') {
         const trimmedQuery = searchQuery.trim().toLowerCase();
         videos = videos.filter(video => 
@@ -52,33 +119,30 @@ export class VideoService {
         );
       }
       
-      // Get thumbnail URLs for each video
+      // Obter URLs de miniaturas para cada vídeo
       for (const video of videos) {
-        // Check for both naming conventions
+        // Verificar ambas as convenções de nomenclatura
         const thumbnailId = video.thumbnailFileId || video.thumbnail_id;
         
-        // Log video details for debugging
-        console.log(`Processing video ${video.$id}: title=${video.title}, video_id=${video.video_id}, videoFileId=${video.videoFileId}, thumbnail_id=${video.thumbnail_id}, thumbnailFileId=${video.thumbnailFileId}`);
+        // Registrar detalhes do vídeo para depuração
+        console.log(`Processando vídeo ${video.$id}: título=${video.title}, video_id=${video.video_id}, videoFileId=${video.videoFileId}, thumbnail_id=${video.thumbnail_id}, thumbnailFileId=${video.thumbnailFileId}`);
         
         if (thumbnailId) {
           try {
             const thumbnailUrl = await storage.getFileView(thumbnailsBucketId, thumbnailId);
             video.thumbnailUrl = thumbnailUrl.href;
           } catch (error) {
-            console.error(`Error getting thumbnail for video ${video.$id}:`, error);
-            // Use placeholder if thumbnail not available
+            console.error(`Erro ao obter miniatura para o vídeo ${video.$id}:`, error);
+            // Usar placeholder se a miniatura não estiver disponível
             video.thumbnailUrl = 'https://via.placeholder.com/300x180?text=Video+Thumbnail';
           }
         } else {
-          // Use placeholder if no thumbnail ID
+          // Usar placeholder se não houver ID de miniatura
           video.thumbnailUrl = 'https://via.placeholder.com/300x180?text=Video+Thumbnail';
         }
-        
-        // Ensure views is a number
-        video.views = video.views || 0;
       }
       
-      // Sort videos based on option
+      // Ordenar vídeos com base na opção
       switch (sortOption) {
         case SortOption.NEWEST:
           videos = videos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -98,12 +162,12 @@ export class VideoService {
               try {
                 const parts = duration.split(':').map(Number);
                 if (parts.length === 2) {
-                  return parts[0] * 60 + parts[1]; // MM:SS format
+                  return parts[0] * 60 + parts[1]; // formato MM:SS
                 } else if (parts.length === 3) {
-                  return parts[0] * 3600 + parts[1] * 60 + parts[2]; // HH:MM:SS format
+                  return parts[0] * 3600 + parts[1] * 60 + parts[2]; // formato HH:MM:SS
                 }
               } catch (error) {
-                console.error('Error parsing duration:', error);
+                console.error('Erro ao analisar duração:', error);
               }
               return 0;
             };
@@ -114,7 +178,7 @@ export class VideoService {
       
       return videos;
     } catch (error) {
-      console.error('Error getting videos:', error);
+      console.error('Erro ao obter vídeos:', error);
       throw error;
     }
   }
@@ -122,11 +186,13 @@ export class VideoService {
   // Get a single video by ID
   static async getVideo(videoId: string): Promise<Video | null> {
     try {
-      const video = await databases.getDocument(
+      const videoDoc = await databases.getDocument(
         databaseId,
         videoCollectionId,
         videoId
-      ) as unknown as Video;
+      );
+      
+      const video = this.normalizeVideo(videoDoc);
       
       // Log video details for debugging
       console.log(`Getting video ${videoId}: title=${video.title}, video_id=${video.video_id}, videoFileId=${video.videoFileId}, thumbnail_id=${video.thumbnail_id}, thumbnailFileId=${video.thumbnailFileId}`);
@@ -225,13 +291,15 @@ export class VideoService {
         return null;
       }
       
-      // Check for the video file ID using both naming conventions
+      // Verificando todos os possíveis campos onde o ID do vídeo pode estar
       const videoFileId = video.video_id || video.videoFileId;
       
       if (!videoFileId) {
         console.error(`Video ${videoId} has no video file ID (checked both video_id and videoFileId)`);
         return null;
       }
+      
+      console.log(`Attempting to get file URL for video ID: ${videoFileId} from bucket: ${videosBucketId}`);
       
       // Get video file URL - não verificamos mais o status de compra
       try {
@@ -240,6 +308,7 @@ export class VideoService {
         return fileUrl.href;
       } catch (error) {
         console.error(`Error getting file URL:`, error);
+        console.error(`Bucket ID: ${videosBucketId}, Video File ID: ${videoFileId}`);
         return null;
       }
     } catch (error) {

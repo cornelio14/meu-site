@@ -102,6 +102,8 @@ const VideoList: FC = () => {
           debouncedSearchQuery
         );
         
+        console.log('Received videos:', videoList);
+        
         // Apply client-side filtering for price range
         let filteredVideos = videoList.filter(video => 
           video.price >= priceRange[0] && video.price <= priceRange[1]
