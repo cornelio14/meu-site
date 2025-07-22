@@ -59,6 +59,7 @@ import Snackbar from '@mui/material/Snackbar';
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
 import Tooltip from '@mui/material/Tooltip';
 import React from 'react';
+import SecurityIcon from '@mui/icons-material/Security';
 
 // Tab panel component
 interface TabPanelProps {
@@ -138,12 +139,6 @@ interface SiteConfig {
   telegram_username: string;
   video_list_title?: string;
   crypto?: string[];
-  email_host?: string;
-  email_port?: string;
-  email_secure?: boolean;
-  email_user?: string;
-  email_pass?: string;
-  email_from?: string;
 }
 
 // Admin page component
@@ -192,37 +187,6 @@ const Admin: FC = () => {
   const [videoListTitle, setVideoListTitle] = useState('');
   const [cryptoWallets, setCryptoWallets] = useState<string[]>([]);
   const [newCryptoWallet, setNewCryptoWallet] = useState('');
-  
-  // Email config state
-  const [emailHost, setEmailHost] = useState('smtp.gmail.com');
-  const [emailPort, setEmailPort] = useState('587');
-  const [emailSecure, setEmailSecure] = useState(false);
-  const [emailUser, setEmailUser] = useState('');
-  const [emailPass, setEmailPass] = useState('');
-  const [emailFrom, setEmailFrom] = useState('');
-  
-  // Email testing state
-  const [testEmailAddress, setTestEmailAddress] = useState('');
-  const [testingEmail, setTestingEmail] = useState(false);
-  const [testEmailResult, setTestEmailResult] = useState<{success: boolean, message: string} | null>(null);
-  const [selectedCrypto, setSelectedCrypto] = useState('BTC');
-  const [editingConfig, setEditingConfig] = useState(false);
-  
-  // Available cryptocurrencies
-  const cryptoCurrencies = [
-    { code: 'BTC', name: 'Bitcoin' },
-    { code: 'ETH', name: 'Ethereum' },
-    { code: 'USDT', name: 'Tether USD' },
-    { code: 'BNB', name: 'Binance Coin' },
-    { code: 'SOL', name: 'Solana' },
-    { code: 'XRP', name: 'Ripple' },
-    { code: 'ADA', name: 'Cardano' },
-    { code: 'DOGE', name: 'Dogecoin' },
-    { code: 'AVAX', name: 'Avalanche' },
-    { code: 'DOT', name: 'Polkadot' },
-    { code: 'MATIC', name: 'Polygon' },
-    { code: 'SHIB', name: 'Shiba Inu' }
-  ];
   
   // Delete confirmation dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -347,14 +311,6 @@ const Admin: FC = () => {
         setStripeSecretKey(config.stripe_secret_key || '');
         setTelegramUsername(config.telegram_username);
         setVideoListTitle(config.video_list_title || 'Available Videos');
-        
-        // Set email configuration if available
-        setEmailHost(config.email_host || 'smtp.gmail.com');
-        setEmailPort(config.email_port || '587');
-        setEmailSecure(config.email_secure || false);
-        setEmailUser(config.email_user || '');
-        setEmailPass(config.email_pass || '');
-        setEmailFrom(config.email_from || '');
         
         // Check if crypto wallets are available in the database
         if (config.crypto && config.crypto.length > 0) {
@@ -906,58 +862,6 @@ const Admin: FC = () => {
           }
         }
         
-        // Tenta salvar configurações de email como um grupo
-        try {
-          const emailConfig = {
-            email_host: emailHost,
-            email_port: emailPort,
-            email_secure: emailSecure,
-            email_user: emailUser,
-            email_pass: emailPass,
-            email_from: emailFrom,
-          };
-          
-                        const configId = siteConfig ? siteConfig.$id : '';
-              await databases.updateDocument(
-                databaseId,
-                siteConfigCollectionId,
-                configId,
-                emailConfig
-              );
-          successCount += 6;
-          successFields.push('email_config');
-        } catch (err) {
-          // Tenta salvar cada campo de email individualmente
-          const emailFields = [
-            { name: 'email_host', value: emailHost },
-            { name: 'email_port', value: emailPort },
-            { name: 'email_secure', value: emailSecure },
-            { name: 'email_user', value: emailUser },
-            { name: 'email_pass', value: emailPass },
-            { name: 'email_from', value: emailFrom },
-          ];
-          
-          for (const field of emailFields) {
-            if (field.value !== undefined && field.value !== null) {
-              try {
-                const updateData = { [field.name]: field.value };
-                await databases.updateDocument(
-                  databaseId,
-                  siteConfigCollectionId,
-                  siteConfig?.$id || '',
-                  updateData
-                );
-                successCount++;
-                successFields.push(field.name);
-              } catch (err) {
-                errorCount++;
-                errorFields.push(field.name);
-                // Continue sem quebrar o processo
-              }
-            }
-          }
-        }
-        
         // Tenta salvar crypto se houver valores
         if (cryptoWallets && cryptoWallets.length > 0) {
           try {
@@ -1474,6 +1378,7 @@ const Admin: FC = () => {
               </Alert>
             )}
 
+            {/* Site Configuration Section */}
             <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
               {editingConfig ? (
                 <Box component="form">
@@ -1529,112 +1434,6 @@ const Admin: FC = () => {
                     value={telegramUsername}
                     onChange={(e) => setTelegramUsername(e.target.value)}
                   />
-                  
-                  <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
-                    Configurações de Email (PayPal)
-                  </Typography>
-
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    Configure os campos abaixo para permitir o envio de emails de confirmação aos compradores do PayPal.
-                  </Alert>
-                  
-                  <TextField
-                    fullWidth
-                    margin="normal"
-                    label="Host SMTP"
-                    value={emailHost}
-                    onChange={(e) => setEmailHost(e.target.value)}
-                    helperText="Ex: smtp.gmail.com"
-                  />
-                  
-                  <TextField
-                    fullWidth
-                    margin="normal"
-                    label="Porta SMTP"
-                    value={emailPort}
-                    onChange={(e) => setEmailPort(e.target.value)}
-                    helperText="Ex: 587"
-                  />
-                  
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={emailSecure}
-                        onChange={(e) => setEmailSecure(e.target.checked)}
-                      />
-                    }
-                    label="Conexão Segura (SSL/TLS)"
-                  />
-                  
-                  <TextField
-                    fullWidth
-                    margin="normal"
-                    label="Usuário de Email"
-                    value={emailUser}
-                    onChange={(e) => setEmailUser(e.target.value)}
-                    helperText="Email de login (ex: seu@gmail.com)"
-                  />
-                  
-                  <TextField
-                    fullWidth
-                    margin="normal"
-                    type="password"
-                    label="Senha de Email/App Password"
-                    value={emailPass}
-                    onChange={(e) => setEmailPass(e.target.value)}
-                    helperText="Senha de App para Gmail ou senha normal para outros provedores"
-                  />
-                  
-                  <TextField
-                    fullWidth
-                    margin="normal"
-                    label="Email de Origem (opcional)"
-                    value={emailFrom}
-                    onChange={(e) => setEmailFrom(e.target.value)}
-                    helperText="Nome <email@exemplo.com> (opcional, usa o email de login por padrão)"
-                  />
-
-                  {/* Teste de configuração de email */}
-                  <Box sx={{ mt: 3, mb: 2 }}>
-                    <Typography variant="subtitle1" gutterBottom>
-                      Testar configurações de email
-                    </Typography>
-                    
-                    <Grid container spacing={2} alignItems="center">
-                      <Grid item xs={12} sm={8}>
-                        <TextField
-                          fullWidth
-                          label="Email para teste"
-                          value={testEmailAddress}
-                          onChange={(e) => setTestEmailAddress(e.target.value)}
-                          placeholder="Digite um email para receber o teste"
-                          helperText="O email de teste será enviado para este endereço"
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={4}>
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          color="secondary"
-                          onClick={handleTestEmailConfig}
-                          disabled={!testEmailAddress || testingEmail}
-                          startIcon={testingEmail ? <CircularProgress size={20} /> : <SendIcon />}
-                        >
-                          {testingEmail ? 'Enviando...' : 'Enviar teste'}
-                        </Button>
-                      </Grid>
-                    </Grid>
-                    
-                    {testEmailResult && (
-                      <Alert 
-                        severity={testEmailResult.success ? 'success' : 'error'} 
-                        sx={{ mt: 2 }}
-                        onClose={() => setTestEmailResult(null)}
-                      >
-                        {testEmailResult.message}
-                      </Alert>
-                    )}
-                  </Box>
                   
                   <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
                     Crypto Wallets
@@ -1755,12 +1554,6 @@ const Admin: FC = () => {
                           setStripeSecretKey(siteConfig.stripe_secret_key || '');
                           setTelegramUsername(siteConfig.telegram_username);
                           setVideoListTitle(siteConfig.video_list_title || 'Available Videos');
-                          setEmailHost(siteConfig.email_host || 'smtp.gmail.com');
-                          setEmailPort(siteConfig.email_port || '587');
-                          setEmailSecure(siteConfig.email_secure || false);
-                          setEmailUser(siteConfig.email_user || '');
-                          setEmailPass(siteConfig.email_pass || '');
-                          setEmailFrom(siteConfig.email_from || '');
                         }
                       }}
                       startIcon={<CancelIcon />}
@@ -1794,34 +1587,6 @@ const Admin: FC = () => {
                     
                     <Typography variant="subtitle1" gutterBottom>
                       <strong>Video List Title:</strong> {siteConfig?.video_list_title || 'Not set'}
-                    </Typography>
-                    
-                    <Typography variant="subtitle1" gutterBottom sx={{ mt: 2, fontWeight: 'bold' }}>
-                      Email Configuration (PayPal):
-                    </Typography>
-                    
-                    <Typography variant="subtitle1">
-                      <strong>SMTP Host:</strong> {siteConfig?.email_host || 'Not set'}
-                    </Typography>
-                    
-                    <Typography variant="subtitle1">
-                      <strong>SMTP Port:</strong> {siteConfig?.email_port || 'Not set'}
-                    </Typography>
-                    
-                    <Typography variant="subtitle1">
-                      <strong>Secure Connection:</strong> {siteConfig?.email_secure ? 'Yes' : 'No'}
-                    </Typography>
-                    
-                    <Typography variant="subtitle1">
-                      <strong>Email User:</strong> {siteConfig?.email_user || 'Not set'}
-                    </Typography>
-                    
-                    <Typography variant="subtitle1">
-                      <strong>Email Password:</strong> {siteConfig?.email_pass ? '•••••••••••••' : 'Not set'}
-                    </Typography>
-                    
-                    <Typography variant="subtitle1" gutterBottom>
-                      <strong>From Email:</strong> {siteConfig?.email_from || 'Default (same as Email User)'}
                     </Typography>
                     
                     <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
@@ -1866,6 +1631,152 @@ const Admin: FC = () => {
                 </Box>
               )}
             </Paper>
+
+            {/* New User Management Section */}
+            <Box sx={{ mt: 6, mb: 4 }}>
+              <Grid container spacing={2} alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
+                <Grid item>
+                  <Typography variant="h5" component="h2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <GroupIcon /> User Management
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={newUser ? <CancelIcon /> : <AddIcon />}
+                    onClick={() => {
+                      if (newUser) {
+                        setNewUser(false);
+                        setUserName('');
+                        setUserEmail('');
+                        setUserPassword('');
+                        setEditingUser(null);
+                      } else {
+                        setNewUser(true);
+                      }
+                    }}
+                  >
+                    {newUser ? 'Cancel' : 'Add Admin User'}
+                  </Button>
+                </Grid>
+              </Grid>
+
+              {/* User form for creating/editing admin users */}
+              <Collapse in={newUser}>
+                <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
+                  <Typography variant="h6" gutterBottom>
+                    {editingUser ? 'Edit Admin User' : 'Create Admin User'}
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Email"
+                        type="email"
+                        value={userEmail}
+                        onChange={(e) => setUserEmail(e.target.value)}
+                        required
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Name"
+                        value={userName}
+                        onChange={(e) => setUserName(e.target.value)}
+                        required
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label={editingUser ? "New Password (leave empty to keep current)" : "Password"}
+                        type="password"
+                        value={userPassword}
+                        onChange={(e) => setUserPassword(e.target.value)}
+                        required={!editingUser}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleSaveUser}
+                        disabled={loading || (!userEmail) || (!userName) || (!userPassword && !editingUser)}
+                        startIcon={loading ? <CircularProgress size={24} color="inherit" /> : <SaveIcon />}
+                      >
+                        {loading ? 'Saving...' : editingUser ? 'Update User' : 'Create User'}
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Paper>
+              </Collapse>
+
+              {/* User List */}
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Email</TableCell>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Created At</TableCell>
+                      <TableCell>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {users.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} align="center">No users found</TableCell>
+                      </TableRow>
+                    ) : (
+                      users.map((user) => (
+                        <TableRow key={user.$id}>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>{user.name}</TableCell>
+                          <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <Tooltip title="Edit User">
+                              <IconButton
+                                color="primary"
+                                onClick={() => handleEditUser(user)}
+                                size="small"
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Reset Password">
+                              <IconButton
+                                color="secondary"
+                                onClick={() => {
+                                  setUserEmail(user.email);
+                                  setUserName(user.name);
+                                  setUserPassword('');
+                                  setEditingUser(user.$id);
+                                  setNewUser(true);
+                                }}
+                                size="small"
+                              >
+                                <SecurityIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete User">
+                              <IconButton
+                                color="error"
+                                onClick={() => openDeleteDialog('user', user.$id)}
+                                size="small"
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
           </Box>
         </TabPanel>
       </Paper>
